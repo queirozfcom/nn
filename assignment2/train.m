@@ -15,8 +15,8 @@ else
 end
 
 % SET HYPERPARAMETERS HERE.
-batchsize = 100;  % Mini-batch size.
-learning_rate = 0.1;  % Learning rate; default = 0.1.
+batchsize = 100;  % Mini-batch size. default=100
+learning_rate = 0.0001;  % Learning rate; default = 0.1.
 momentum = 0.9;  % Momentum; default = 0.9.
 numhid1 = 50;  % Dimensionality of embedding space; default = 50.
 numhid2 = 200;  % Number of units in hidden layer; default = 200.
@@ -99,27 +99,27 @@ for epoch = 1:epochs
 
     %% HIDDEN LAYER.
     % FILL IN CODE. Replace the line below by one of the options.
-    embed_to_hid_weights_gradient = zeros(numhid1 * numwords, numhid2);
+    % embed_to_hid_weights_gradient = zeros(numhid1 * numwords, numhid2);
     % Options:
     % (a) embed_to_hid_weights_gradient = back_propagated_deriv_1' * embedding_layer_state;
-    % (b) embed_to_hid_weights_gradient = embedding_layer_state * back_propagated_deriv_1';
+    embed_to_hid_weights_gradient = embedding_layer_state * back_propagated_deriv_1';
     % (c) embed_to_hid_weights_gradient = back_propagated_deriv_1;
     % (d) embed_to_hid_weights_gradient = embedding_layer_state;
 
     % FILL IN CODE. Replace the line below by one of the options.
-    hid_bias_gradient = zeros(numhid2, 1);
+    % hid_bias_gradient = zeros(numhid2, 1);
     % Options
-    % (a) hid_bias_gradient = sum(back_propagated_deriv_1, 2);
+    hid_bias_gradient = sum(back_propagated_deriv_1, 2);
     % (b) hid_bias_gradient = sum(back_propagated_deriv_1, 1);
     % (c) hid_bias_gradient = back_propagated_deriv_1;
     % (d) hid_bias_gradient = back_propagated_deriv_1';
 
     % FILL IN CODE. Replace the line below by one of the options.
-    back_propagated_deriv_2 = zeros(numhid2, batchsize);
+    % back_propagated_deriv_2 = zeros(numhid2, batchsize);
     % Options
-    % (a) back_propagated_deriv_2 = embed_to_hid_weights * back_propagated_deriv_1;
+    back_propagated_deriv_2 = embed_to_hid_weights * back_propagated_deriv_1;
     % (b) back_propagated_deriv_2 = back_propagated_deriv_1 * embed_to_hid_weights;
-    % (c) back_propagated_deriv_2 = back_propagated_deriv_1' * embed_to_hid_weights;
+    % back_propagated_deriv_2 = back_propagated_deriv_1' * embed_to_hid_weights;
     % (d) back_propagated_deriv_2 = back_propagated_deriv_1 * embed_to_hid_weights';
 
     word_embedding_weights_gradient(:) = 0;
