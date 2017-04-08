@@ -145,7 +145,8 @@ function ret = d_loss_by_d_model(model, data, wd_coefficient)
 	 
   num_samples = columns(data.inputs);
  
-   
+  num_targets = rows(data.targets);
+    
   % C is the regular loss without weight decay
   % d_C_by_d_model = (1 / num_samples)  
   
@@ -159,10 +160,50 @@ function ret = d_loss_by_d_model(model, data, wd_coefficient)
   
   % d_E_by_d_model = d_C_by_d_model + d_WD_by_d_model 
   
+  % dim = #num_samples    
+  
+  %disp("model.input_to_hid size"),disp(size(model.input_to_hid));
+  
+  %disp("model.hid_to_class size"),disp(size(model.hid_to_class));
+  
+  %hid_input = model.input_to_hid * data.inputs; 
+  %disp("hid_input size:"), disp(size(hid_input));  
+    
+  %hid_output = logistic(hid_input);
+  %disp("hid_output size:"), disp(size(hid_output));
+  
+  %class_input = hid_output * model.hid_to_class';
+  %disp("class_input size:"), disp(size(class_input));
+  
+  hid_input = model.input_to_hid * data.inputs; % input to the hidden units, i.e. before the logistic. size: <number of hidden units> by <number of data cases>
+  hid_output = logistic(hid_input); % output of the hidden units, i.e. after the logistic. size: <number of hidden units> by <number of data cases>
+  class_input = model.hid_to_class * hid_output; % input to the components of the softmax. size: <number of classes, i.e. 10> by <number of data cases>
+  
+ 
+  class_normalizer = log_sum_exp_over_rows(class_input); % log(sum(exp of class_input)) is what we subtract to get properly normalized log class probabilities. size: <1> by <number of data cases>
+  log_class_prob = class_input - repmat(class_normalizer, [size(class_input, 1), 1]); % log of probability of each class. size: <number of classes, i.e. 10> by <number of data cases>
+  class_prob = exp(log_class_prob); % probability of each class. Each column (i.e. each case) sums to 1. size: <number of classes, i.e. 10> by <number of data cases>
+ 
+  errors_output = (class_prob - data.targets ) /size(data.targets,2);
+  %disp("errors_output size:"), disp(size(errors_output)); 
+ 
+  dc_by_dwhid = errors_output * hid_output';
+  %disp("dc_by_dwhid size:"), disp(size(dc_by_dwhid)); 
+ 
+    
+ d_hid_output_d_hid_input = hid_output .* (1-hid_output);
+ 
+ d_class_input_d_hid_output = model.hid_to_class;
+ 
+ hid_to_class = hid_output;
+ 
+ %d_CEerror_d_clas_input =  ;
+ 
+  dc_by_dwinput = ((model.hid_to_class' * errors_output) .* d_hid_output_d_hid_input) * data.inputs';
    
   % This is the only function that you're expected to change. Right now, it just returns a lot of zeros, which is obviously not the correct output. Your job is to replace that by a correct computation.
-  ret.hid_to_class = model.hid_to_class * wd_coefficient;
-  ret.input_to_hid = model.input_to_hid * wd_coefficient;
+  ret.hid_to_class = dc_by_dwhid + (model.hid_to_class * wd_coefficient);
+  ret.input_to_hid = dc_by_dwinput + (model.input_to_hid * wd_coefficient);
 end
 
 function ret = model_to_theta(model)
